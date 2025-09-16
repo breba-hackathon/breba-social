@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+websockets
+sqlmodel
+aiosqlite
+strands-agents
+strands-agents-tools
+python-dotenv
+jinja2

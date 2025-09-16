@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bluesky Stream – Social Media Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Bluesky Stream: Live updates from Bluesky Jetstream. A clean, modern, and responsive social media portal.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-bg: #fff;
+            --color-text: #222;
+            --color-accent: #1976d2;
+            --color-border: #e3e8ef;
+            --color-muted: #888;
+            --color-shadow: 0 2px 12px 0 rgba(0,0,0,0.06);
+            --radius: 14px;
+            --navbar-height: 60px;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: var(--color-bg);
+            color: var(--color-text);
+            font-family: 'Inter', Arial, sans-serif;
+            min-height: 100%;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .navbar {
+            height: var(--navbar-height);
+            background: var(--color-bg);
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            align-items: center;
+            padding: 0 32px;
+            box-sizing: border-box;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .navbar-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--color-accent);
+            letter-spacing: -1px;
+        }
+        .hero {
+            text-align: center;
+            margin: 48px 0 32px 0;
+        }
+        .hero h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0 0 10px 0;
+            color: var(--color-accent);
+        }
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--color-muted);
+            margin: 0;
+        }
+        .feed-container {
+            max-width: 540px;
+            margin: 0 auto 48px auto;
+            width: 100%;
+            padding: 0 16px;
+            box-sizing: border-box;
+        }
+        .post-card {
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
+            box-shadow: var(--color-shadow);
+            margin-bottom: 32px;
+            padding: 20px 20px 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+            transition: box-shadow 0.15s;
+        }
+        .post-card:hover {
+            box-shadow: 0 4px 24px 0 rgba(25, 118, 210, 0.08);
+        }
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #f0f4fa;
+            border: 1px solid var(--color-border);
+            display: block;
+        }
+        .avatar.placeholder {
+            background: #e3e8ef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #b0b8c1;
+            font-size: 1.2rem;
+        }
+        .author-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .author-handle {
+            font-weight: 600;
+            color: var(--color-text);
+            font-size: 1rem;
+        }
+        .author-did {
+            color: var(--color-muted);
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+        .post-timestamp {
+            color: var(--color-muted);
+            font-size: 0.95rem;
+            margin-top: 2px;
+        }
+        .post-content {
+            font-size: 1.13rem;
+            line-height: 1.6;
+            word-break: break-word;
+        }
+        .post-media {
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .post-image {
+            max-width: 100%;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 1px 6px 0 rgba(25, 118, 210, 0.07);
+            transition: box-shadow 0.12s;
+        }
+        .post-image:active {
+            box-shadow: 0 2px 12px 0 rgba(25, 118, 210, 0.13);
+        }
+        .post-video {
+            width: 100%;
+            max-width: 100%;
+            border-radius: 10px;
+            background: #f0f4fa;
+        }
+        .media-placeholder {
+            width: 100%;
+            min-height: 120px;
+            background: #f0f4fa;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-muted);
+            font-size: 1.1rem;
+            border: 1px dashed #cfd8dc;
+        }
+        .footer {
+            margin-top: auto;
+            padding: 32px 0 16px 0;
+            text-align: center;
+            color: var(--color-muted);
+            font-size: 1rem;
+            border-top: 1px solid var(--color-border);
+            background: var(--color-bg);
+        }
+        /* Lightbox styles */
+        .lightbox-backdrop {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(34, 34, 34, 0.85);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s;
+        }
+        .lightbox-img {
+            max-width: 96vw;
+            max-height: 90vh;
+            border-radius: 12px;
+            box-shadow: 0 4px 32px 0 rgba(0,0,0,0.18);
+            background: #fff;
+        }
+        .lightbox-close {
+            position: absolute;
+            top: 32px;
+            right: 32px;
+            color: #fff;
+            font-size: 2.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            z-index: 1001;
+            background: none;
+            border: none;
+        }
+        @media (max-width: 600px) {
+            .feed-container {
+                padding: 0 2vw;
+            }
+            .post-card {
+                padding: 14px 8px 12px 12px;
+            }
+            .navbar {
+                padding: 0 12px;
+            }
+            .lightbox-close {
+                top: 12px;
+                right: 12px;
+                font-size: 1.7rem;
+            }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <span class="navbar-title">Bluesky Stream</span>
+    </nav>
+    <section class="hero">
+        <h1>Bluesky Stream</h1>
+        <p>Live updates from Bluesky Jetstream</p>
+    </section>
+    <main class="feed-container" id="feed">
+        <!-- Posts will be rendered here by JS -->
+    </main>
+    <footer class="footer">
+        © 2025 Bluesky Stream. All rights reserved.
+    </footer>
+    <script>
+    // --- DATA: Feed posts (injected) ---
+    const postsData = [
+        {
+            "id": 10,
+            "uri": "at://did:plc:ad43h6gvrhxl2pmy4twdptak/app.bsky.feed.post/3lyyf6zvl5u2z",
+            "cid": "bafyreiei6ftcazjugrbykgitvnfzyudbeavomugdghb6iey36muks3xfse",
+            "did": "did:plc:ad43h6gvrhxl2pmy4twdptak",
+            "collection": "app.bsky.feed.post",
+            "rkey": "3lyyf6zvl5u2z",
+            "time_us": 1758062352512192,
+            "created_at": "2025-09-16 22:39:12.123000",
+            "langs": ["en"],
+            "text": "Physics reveals how the universe works—forces, motion, energy, and matter. From quantum particles to galaxies, it explains reality’s structure and drives innovations like electronics, space travel, and clean energy.",
+            "reply_root_uri": null,
+            "reply_parent_uri": null,
+            "record": {
+                "$type": "app.bsky.feed.post",
+                "createdAt": "2025-09-16T22:39:12.123Z",
+                "langs": ["en"],
+                "text": "Physics reveals how the universe works—forces, motion, energy, and matter. From quantum particles to galaxies, it explains reality’s structure and drives innovations like electronics, space travel, and clean energy."
+            },
+            "raw": null
+        },
+        {
+            "id": 5,
+            "uri": "at://did:plc:4aqzua5vsewimmusg66fyajl/app.bsky.feed.post/3lyy3ry4xo22q",
+            "cid": "bafyreic3uymvuti4vmdaw3i5274blsk3vuuuqmopf2pe5bhr3dcabk3edu",
+            "did": "did:plc:4aqzua5vsewimmusg66fyajl",
+            "collection": "app.bsky.feed.post",
+            "rkey": "3lyy3ry4xo22q",
+            "time_us": 1758052254912026,
+            "created_at": "2025-09-16T19:50:50.380000",
+            "langs": ["en"],
+            "text": "In occupied Melitopol, petrol has once again run out, with most gas stations empty. The last fuel delivery was made on Friday, and no new supplies have arrived since.\n\nUkrainian sanctions.",
+            "reply_root_uri": null,
+            "reply_parent_uri": null,
+            "record": {
+                "$type": "app.bsky.feed.post",
+                "createdAt": "2025-09-16T19:50:50.380Z",
+                "embed": {
+                    "$type": "app.bsky.embed.images",
+                    "images": [
+                        {
+                            "alt": "",
+                            "aspectRatio": {
+                                "height": 1280,
+                                "width": 960
+                            },
+                            "image": {
+                                "$type": "blob",
+                                "ref": {
+                                    "$link": "bafkreih3ps2by7a7bkh4pexkxiov52fqcgy2r62wx2ip2atzaxcebpo6gm"
+                                },
+                                "mimeType": "image/jpeg",
+                                "size": 555635
+                            }
+                        },
+                        {
+                            "alt": "",
+                            "aspectRatio": {
+                                "height": 580,
+                                "width": 960
+                            },
+                            "image": {
+                                "$type": "blob",
+                                "ref": {
+                                    "$link": "bafkreifziry2g2t2nfuq6wp73idazx446tsmcpm6mumasf65gfqcedncxq"
+                                },
+                                "mimeType": "image/jpeg",
+                                "size": 202671
+                            }
+                        }
+                    ]
+                },
+                "langs": ["en"],
+                "text": "In occupied Melitopol, petrol has once again run out, with most gas stations empty. The last fuel delivery was made on Friday, and no new supplies have arrived since.\n\nUkrainian sanctions."
+            },
+            "raw": null
+        }
+    ];
+
+    // --- Utility: Date formatting ---
+    function formatDate(isoString) {
+        // Accepts both "2025-09-16T22:39:12.123Z" and "2025-09-16 22:39:12.123000"
+        let date;
+        if (isoString.includes('T')) {
+            date = new Date(isoString);
+        } else {
+            // Convert "2025-09-16 22:39:12.123000" to "2025-09-16T22:39:12.123Z"
+            date = new Date(isoString.replace(' ', 'T').replace(/\.\d+$/, '') + 'Z');
+        }
+        if (isNaN(date)) return isoString;
+        return date.toLocaleString(undefined, {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        });
+    }
+
+    // --- Profile cache and fetch ---
+    const profileCache = {};
+    async function fetchProfile(did) {
+        if (profileCache[did]) return profileCache[did];
+        let profile = null;
+        try {
+            const resp = await fetch(`https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(did)}`);
+            if (resp.ok) {
+                profile = await resp.json();
+            } else {
+                // Try batch endpoint as fallback
+                const batchResp = await fetch(`https://public.api.bsky.app/xrpc/app.bsky.actor.getProfiles`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({actors: [did]})
+                });
+                if (batchResp.ok) {
+                    const batch = await batchResp.json();
+                    if (batch.profiles && batch.profiles.length > 0) {
+                        profile = batch.profiles[0];
+                    }
+                }
+            }
+        } catch (e) {}
+        profileCache[did] = profile;
+        return profile;
+    }
+
+    // --- Avatar blob fetch ---
+    async function fetchAvatarUrl(did, avatarCid) {
+        if (!avatarCid) return null;
+        // Try primary endpoint
+        let url = `https://bsky.social/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${encodeURIComponent(avatarCid)}`;
+        try {
+            const resp = await fetch(url, {method: 'HEAD'});
+            if (resp.ok) return url;
+        } catch (e) {}
+        // Fallback endpoint
+        url = `https://bsky.network/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${encodeURIComponent(avatarCid)}`;
+        try {
+            const resp = await fetch(url, {method: 'HEAD'});
+            if (resp.ok) return url;
+        } catch (e) {}
+        return null;
+    }
+
+    // --- Render posts ---
+    async function renderFeed() {
+        const feed = document.getElementById('feed');
+        feed.innerHTML = '<div style="text-align:center;color:#888;margin:32px 0;">Loading feed...</div>';
+
+        // Sort posts by created_at descending
+        const posts = postsData.slice().sort((a, b) => {
+            if (!a.created_at || !b.created_at) return 0;
+            return new Date(b.created_at) - new Date(a.created_at);
+        });
+
+        // Collect unique DIDs for profile fetch
+        const didSet = new Set(posts.map(p => p.did).filter(Boolean));
+        // Pre-fetch all profiles
+        const profileMap = {};
+        await Promise.all(Array.from(didSet).map(async did => {
+            const profile = await fetchProfile(did);
+            profileMap[did] = profile;
+        }));
+
+        // Render posts
+        feed.innerHTML = '';
+        for (const post of posts) {
+            const did = post.did;
+            const profile = profileMap[did] || {};
+            const handle = profile.handle ? '@' + profile.handle : '@unknown';
+            const displayName = profile.displayName || handle;
+            const avatarCid = profile.avatar && profile.avatar.startsWith('bafk') ? profile.avatar : null;
+            const avatarUrl = avatarCid ? await fetchAvatarUrl(did, avatarCid) : (profile.avatar && profile.avatar.startsWith('http') ? profile.avatar : null);
+
+            // Post card
+            const card = document.createElement('article');
+            card.className = 'post-card';
+            card.setAttribute('data-did', did || '');
+            card.setAttribute('data-uri', post.uri || '');
+
+            // --- Header: avatar + handle ---
+            const header = document.createElement('header');
+            header.className = 'post-header';
+
+            const avatar = document.createElement('img');
+            avatar.className = 'avatar';
+            avatar.width = 38;
+            avatar.height = 38;
+            if (avatarUrl) {
+                avatar.src = avatarUrl;
+                avatar.alt = displayName;
+            } else {
+                avatar.classList.add('placeholder');
+                avatar.alt = '';
+                avatar.src = '';
+            }
+            avatar.onerror = function() {
+                this.src = '';
+                this.alt = '';
+                this.classList.add('placeholder');
+            };
+
+            const authorInfo = document.createElement('div');
+            authorInfo.className = 'author-info';
+
+            const handleSpan = document.createElement('span');
+            handleSpan.className = 'author-handle';
+            handleSpan.textContent = displayName;
+
+            // Hidden DID for accessibility/debug
+            const didLabel = document.createElement('span');
+            didLabel.className = 'author-did';
+            didLabel.style.display = 'none';
+            didLabel.textContent = did;
+
+            authorInfo.appendChild(handleSpan);
+            authorInfo.appendChild(didLabel);
+
+            header.appendChild(avatar);
+            header.appendChild(authorInfo);
+
+            // --- Timestamp ---
+            const timestamp = document.createElement('div');
+            timestamp.className = 'post-timestamp';
+            timestamp.textContent = formatDate(post.created_at);
+
+            // --- Content ---
+            const content = document.createElement('div');
+            content.className = 'post-content';
+            content.textContent = post.text || (post.record && post.record.text) || '';
+
+            // --- Media (images/videos) ---
+            const mediaDiv = document.createElement('div');
+            mediaDiv.className = 'post-media';
+
+            // Images
+            let images = [];
+            if (post.record && post.record.embed && post.record.embed.images && Array.isArray(post.record.embed.images)) {
+                images = post.record.embed.images;
+            }
+            for (const img of images) {
+                const imgEl = document.createElement('img');
+                imgEl.className = 'post-image';
+                imgEl.setAttribute('data-did', did);
+                imgEl.setAttribute('data-cid', img.image && img.image.ref && img.image.ref.$link ? img.image.ref.$link : '');
+                imgEl.setAttribute('loading', 'lazy');
+                if (img.aspectRatio && img.aspectRatio.width && img.aspectRatio.height) {
+                    imgEl.style.aspectRatio = `${img.aspectRatio.width}/${img.aspectRatio.height}`;
+                } else {
+                    imgEl.style.aspectRatio = '16/9';
+                }
+                imgEl.alt = img.alt || '';
+                let cid = img.image && img.image.ref && img.image.ref.$link ? img.image.ref.$link : '';
+                if (cid && cid.startsWith('bafk')) {
+                    imgEl.src = `https://bsky.social/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${encodeURIComponent(cid)}`;
+                } else {
+                    imgEl.src = '';
+                }
+                imgEl.onerror = function() {
+                    // Try fallback endpoint if not already tried
+                    const did = this.getAttribute('data-did');
+                    const cid = this.getAttribute('data-cid');
+                    const triedFallback = this.getAttribute('data-fallback');
+                    if (!triedFallback) {
+                        this.src = `https://bsky.network/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${encodeURIComponent(cid)}`;
+                        this.setAttribute('data-fallback', '1');
+                    } else {
+                        // Both failed, show placeholder
+                        const placeholder = document.createElement('div');
+                        placeholder.className = 'media-placeholder';
+                        placeholder.textContent = 'Media unavailable';
+                        this.replaceWith(placeholder);
+                    }
+                };
+                imgEl.onclick = function() {
+                    createLightbox(this.src, this.alt);
+                };
+                mediaDiv.appendChild(imgEl);
+            }
+
+            // Videos (not present in this post, but template for future)
+            if (post.record && post.record.embed && post.record.embed.video && post.record.embed.video.cid) {
+                const videoEl = document.createElement('video');
+                videoEl.className = 'post-video';
+                videoEl.setAttribute('controls', 'controls');
+                videoEl.setAttribute('playsinline', 'playsinline');
+                videoEl.setAttribute('preload', 'metadata');
+                videoEl.style.background = '#e3e8ef';
+                videoEl.style.maxWidth = '100%';
+                videoEl.style.borderRadius = '10px';
+                videoEl.setAttribute('data-did', did);
+                videoEl.setAttribute('data-cid', post.record.embed.video.cid);
+                const source = document.createElement('source');
+                source.src = `https://bsky.social/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${encodeURIComponent(post.record.embed.video.cid)}`;
+                source.type = post.record.embed.video.mimeType || 'video/mp4';
+                videoEl.appendChild(source);
+                videoEl.onerror = function() {
+                    // Try fallback endpoint if not already tried
+                    const did = this.getAttribute('data-did');
+                    const cid = this.getAttribute('data-cid');
+                    const triedFallback = this.getAttribute('data-fallback');
+                    if (!triedFallback) {
+                        this.querySelector('source').src = `https://bsky.network/xrpc/com.atproto.sync.getBlob?did=${encodeURIComponent(did)}&cid=${encodeURIComponent(cid)}`;
+                        this.setAttribute('data-fallback', '1');
+                        this.load();
+                    } else {
+                        // Both failed, show placeholder
+                        const placeholder = document.createElement('div');
+                        placeholder.className = 'media-placeholder';
+                        placeholder.textContent = 'Media unavailable';
+                        this.replaceWith(placeholder);
+                    }
+                };
+                mediaDiv.appendChild(videoEl);
+            }
+
+            // If no media, don't append mediaDiv
+            if (mediaDiv.children.length === 0) {
+                mediaDiv.style.display = 'none';
+            }
+
+            // --- Assemble card ---
+            card.appendChild(header);
+            card.appendChild(timestamp);
+            card.appendChild(content);
+            card.appendChild(mediaDiv);
+
+            feed.appendChild(card);
+        }
+    }
+
+    // --- Lightbox for images ---
+    function createLightbox(src, alt) {
+        // Remove any existing lightbox
+        const existing = document.getElementById('lightbox-backdrop');
+        if (existing) existing.remove();
+        // Create elements
+        const backdrop = document.createElement('div');
+        backdrop.className = 'lightbox-backdrop';
+        backdrop.id = 'lightbox-backdrop';
+        const img = document.createElement('img');
+        img.className = 'lightbox-img';
+        img.src = src;
+        img.alt = alt || '';
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'lightbox-close';
+        closeBtn.innerHTML = '&times;';
+        closeBtn.onclick = () => backdrop.remove();
+        backdrop.onclick = (e) => {
+            if (e.target === backdrop) backdrop.remove();
+        };
+        backdrop.appendChild(img);
+        backdrop.appendChild(closeBtn);
+        document.body.appendChild(backdrop);
+    }
+
+    // --- Start rendering feed on page load ---
+    window.addEventListener('DOMContentLoaded', renderFeed);
+    </script>
+</body>
+</html>
